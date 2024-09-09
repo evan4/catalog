@@ -20,6 +20,5 @@
     <label for="repeat-password" class="form-label">Repeat password</label>
     <input type="password" class="form-control" name="repeat-password" id="repeat-password" required>
   </div>
-
   <button type="submit" class="btn btn-primary">Singup</button>
 </form>

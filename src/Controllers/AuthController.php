@@ -12,9 +12,7 @@ class AuthController extends Controller
   public function login()
   {
     $postArgs = filter_input_array(INPUT_POST);
-    $phone = '';
-    $email = '';
-    
+
     if(
       isset($postArgs['phone-email'])
       && !empty($postArgs['phone-email'])
@@ -36,10 +34,28 @@ class AuthController extends Controller
       isset($postArgs['password'])
       && !empty($postArgs['password'])
     ){
+      $password = $this->sanitizeText( $postArgs['password'] );
     }else{
       $this->session->set('error', 'Please fill out password');
       redirect('/');
     }
+
+    if(
+      isset($postArgs['smart-token'])
+      && !empty($postArgs['smart-token'])
+    ){
+      $isCaptchaValid = $this->checkCaptcha($postArgs['smart-token']);
+
+      if(!$isCaptchaValid){
+        $this->session->set('error', 'Please fill out captcha');
+        redirect('/');
+      }
+
+    }else{
+      $this->session->set('error', 'Please fill out captcha');
+      redirect('/');
+    }
+
 
     $user = new User();
 
@@ -53,16 +69,22 @@ class AuthController extends Controller
 
     $userExists = $user->getOne(
       ['username','email', 'phone', 'password'],
-      [ $fieldName => $fieldValue ]
+      [ $fieldName => $fieldValue]
     );
 
     if($userExists){
-      $this->session->set('username', $userExists['username']);
-      redirect('/admin');
+      if(password_verify( $password, $userExists['password'] )){
+        $this->session->set('username', $userExists['username']);
+        redirect('/admin');
+      }else{
+        $this->session->set('error', 'Your phone, email or password is not valid');
+      }
+     
     }else{
       $this->session->set('error', 'User with such phone or email does not exists');
-      redirect('/');
     }
+    
+    redirect('/');
     
   }
 
@@ -155,7 +177,7 @@ class AuthController extends Controller
       redirect('/');
   }
   
-  private function check_captcha($token)
+  private function checkCaptcha($token)
   {
     $ch = curl_init();
     $args = http_build_query([
@@ -173,8 +195,9 @@ class AuthController extends Controller
   
     if ($httpcode !== 200) {
         echo "Allow access due to an error: code=$httpcode; message=$server_output\n";
-        return true;
+        return false;
     }
+
     $resp = json_decode($server_output);
     return $resp->status === "ok";
   }

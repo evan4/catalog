@@ -8,6 +8,11 @@
     <label for="password" class="form-label">Password</label>
     <input type="password" class="form-control" name="password" id="password" required>
   </div>
-
-  <button type="submit" class="btn btn-primary">Sign in</button>
+  <div
+    id="captcha-container"
+    class="smart-captcha"
+    style="height: 100px"
+    data-sitekey="<?php echo $_ENV['SMARTCAPTCHA_CLIENT_KEY']; ?>"
+    ></div>
+  <button type="submit" class="btn btn-primary mt-1">Sign in</button>
 </form>
